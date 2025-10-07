@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - AmbCall</title>
+    <link rel="stylesheet" href="signin_style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="index.html" class="back-btn" title="Back to Home">←</a>
+    
+    <div class="login-container">
+        <h2>👤 Patient Sign In</h2>
+        
+        <div id="statusMessage" style="display: none;"></div>
+        
+        <form id="signinForm">
+            <label for="upemail">Email Address</label>
+            <input type="email" id="upemail" name="email" placeholder="Enter your email" required>
+            
+            <label for="uppassword">Password</label>
+            <input type="password" id="uppassword" name="password" placeholder="Enter your password" required>
+            
+            <button type="submit" id="upsubmit_btn" class="btn">
+                🔐 Sign In
+            </button>
+            
+            <button type="button" id="gsi" class="btn google-btn">
+                Continue with Google
+            </button>
+        </form>
+        
+        <div class="form-links">
+            <a href="email-signup.html">
+                ✨ Don't have an account? Sign up here
+            </a>
+            <a href="emergency.html">
+                🚨 Emergency? Skip login and get help now
+            </a>
+            <a href="index.html">
+                ← Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script type="module" src="login.js"></script>
+    <script type="module" src="googlelogin.js"></script>
+</body>
+</html>

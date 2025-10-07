@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Booking</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="section-container">
+        <h2>Welcome to Ambulance Booking 🚑</h2>
+        
+        <!-- Auth Section -->
+        <div id="authSection">
+            <button id="emailSignIn" class="btn-primary2" onclick="location.href='email-signin.html'">Sign in with Email</button>
+            <button id="emailSignUp" class="btn-secondary" onclick="location.href='email-signup.html'">Sign up with Email</button>
+        </div>
+
+        <!-- Location Tracking Option -->
+        <div id="locationSection">
+            <h3>Or Book Without Login</h3>
+            <button id="useLocation" class="btn-primary">📍 Use My Location</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("useLocation").addEventListener("click", () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        localStorage.setItem("latitude", latitude);
+                        localStorage.setItem("longitude", longitude);
+                        window.location.href = "results.html";
+                    },
+                    (error) => {
+                        alert("Unable to fetch location. Please enable location services.");
+                        console.error("Geolocation error:", error);
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        });
+    </script>
+</body>
+</html>

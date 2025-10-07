@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Ambulance Booking</title>
+    <link rel="stylesheet" href="booking_style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHmxxW-gWoCgs6CUObO8YBVH4w3V5VnU4&libraries=places"></script>
+</head>
+<body>
+    <div class="booking-container">
+        <h2>🚨 Emergency Booking</h2>
+        
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+        
+        <form id="bookingForm">
+            <div class="location-group">
+                <div style="flex: 1;">
+                    <label for="location">Your Location</label>
+                    <input type="text" id="location" name="location" placeholder="Enter your address or landmark" required>
+                </div>
+                <button type="button" id="useLocation">
+                    Get Location
+                </button>
+            </div>
+            
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" required>
+            
+            <label for="emergency">Emergency Type (Optional)</label>
+            <input type="text" id="emergency" name="emergency" placeholder="Brief description (e.g., cardiac, accident)">
+            
+            <button type="submit" id="findHospitals">
+                🏥 Find Nearest Hospitals
+            </button>
+        </form>
+        
+        <!-- Instruction Box -->
+        <div class="emergency-tips" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 0, 123, 0.1); border: 1px solid rgba(255, 0, 123, 0.3); border-radius: 12px;">
+            <h3 style="color: #ff007b; margin-bottom: 1rem; font-size: 1.2rem;">⚡ While You Wait</h3>
+            <p style="color: #a1a1aa; font-size: 0.95rem; line-height: 1.5;">
+                • Stay calm and keep the patient conscious<br>
+                • Apply first aid if trained<br>
+                • Keep airways clear<br>
+                • Monitor vital signs if possible
+            </p>
+            <a href="firstaid.html" style="color: #00d4ff; text-decoration: underline; font-size: 0.9rem;">
+                View First Aid Guide →
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let map, marker;
+
+        // Get user location
+        document.getElementById('useLocation').addEventListener('click', function() {
+            const button = this;
+            const locationInput = document.getElementById('location');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Add loading state
+            button.innerHTML = '<div class="loading"></div>Getting...';
+            button.disabled = true;
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        // Initialize the map if not already initialized
+                        if (!map) {
+                            map = new google.maps.Map(document.getElementById("map"), {
+                                center: { lat, lng: lon },
+                                zoom: 14,
+                            });
+                        }
+
+                        // Add or update the marker
+                        if (marker) {
+                            marker.setPosition({ lat, lng: lon });
+                        } else {
+                            marker = new google.maps.Marker({
+                                position: { lat, lng: lon },
+                                map: map,
+                                title: "Your Location",
+                            });
+                        }
+
+                        // Use reverse geocoding to get address
+                        const geocoder = new google.maps.Geocoder();
+                        const latLng = { lat, lng: lon };
+
+                        geocoder.geocode({ location: latLng }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                locationInput.value = results[0].formatted_address;
+                                showStatus('Location found successfully!', 'success');
+                            } else {
+                                locationInput.value = `${lat}, ${lon}`;
+                                showStatus('Coordinates captured successfully!', 'success');
+                            }
+                        });
+
+                        // Save location to localStorage and redirect
+                        localStorage.setItem("latitude", lat);
+                        localStorage.setItem("longitude", lon);
+                        setTimeout(() => {
+                            window.location.href = "results.html";
+                        }, 1000); // Redirect after 1 second
+
+                        // Reset button
+                        button.innerHTML = '📍 Get Location';
+                        button.disabled = false;
+                    },
+                    function(error) {
+                        console.error('Error getting location:', error);
+                        showStatus('Location access denied. Please enter manually.', 'error');
+                        
+                        // Reset button
+                        button.innerHTML = '📍 Get Location';
+                        button.disabled = false;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                showStatus('Geolocation not supported by browser', 'error');
+                button.innerHTML = '📍 Get Location';
+                button.disabled = false;
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const location = document.getElementById('location').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const emergency = document.getElementById('emergency').value.trim();
+            
+            if (!location || !phone) {
+                showStatus('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Phone validation
+            const phoneRegex = /^[+]?[0-9]{10,15}$/;
+            if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+                showStatus('Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            // Store booking data
+            const bookingData = {
+                location: location,
+                phone: phone,
+                emergency: emergency,
+                timestamp: new Date().toISOString(),
+                bookingId: generateBookingId()
+            };
+            
+            localStorage.setItem('currentBooking', JSON.stringify(bookingData));
+            
+            // Show loading and redirect
+            showStatus('🔍 Searching for nearest hospitals...', 'info');
+            
+            setTimeout(() => {
+                window.location.href = 'results.html';
+            }, 2000);
+        });
+
+        // Utility functions
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        function generateBookingId() {
+            return 'AMB-' + Date.now().toString().slice(-6) + Math.random().toString(36).substr(2, 4).toUpperCase();
+        }
+
+        // Auto-format phone number
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('91') && value.length <= 10) {
+                value = '91' + value;
+            }
+            if (value.length > 12) {
+                value = value.slice(0, 12);
+            }
+            e.target.value = value.replace(/(\d{2})(\d{5})(\d{5})/, '+$1 $2 $3');
+        });
+    </script>
+</body>
+</html>

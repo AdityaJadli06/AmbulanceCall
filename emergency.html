@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Access - AmbCall</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <a href="index.html" class="back-btn" title="Back to Home">←</a>
+    
+    <div class="section-container">
+        <h1>🚨 Emergency Access</h1>
+        <p style="font-size: 1.2rem; color: #ff007b; font-weight: 600; margin-bottom: 2rem;">
+            No login required - Get immediate help
+        </p>
+        
+        <!-- National Emergency Numbers -->
+        <div class="feature-card" style="background: rgba(255, 0, 123, 0.1); border-color: rgba(255, 0, 123, 0.3); margin-bottom: 2rem;">
+            <h2 style="color: #ff007b; margin-bottom: 1.5rem;">📞 Call Emergency Services Now</h2>
+            <div class="button-grid" style="gap: 1rem;">
+                <a href="tel:108" class="btn-secondary" style="text-decoration: none; font-size: 1.1rem;">
+                    🚑 Ambulance: 108
+                </a>
+                <a href="tel:112" class="btn-secondary" style="text-decoration: none; font-size: 1.1rem;">
+                    ⚠️ Emergency: 112
+                </a>
+                <a href="tel:100" class="btn-primary" style="text-decoration: none; font-size: 1.1rem;">
+                    👮 Police: 100
+                </a>
+                <a href="tel:101" class="btn-primary" style="text-decoration: none; font-size: 1.1rem;">
+                    🔥 Fire: 101
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Ambulance Booking -->
+        <div class="feature-card">
+            <h2>🏥 Quick Ambulance Booking</h2>
+            <p style="margin-bottom: 2rem;">Find and contact nearest hospitals without creating an account</p>
+            <a href="booking.html" class="btn-primary" style="text-decoration: none; font-size: 1.2rem; padding: 1.2rem 2rem;">
+                🚑 Book Ambulance Now
+            </a>
+        </div>
+        
+        <!-- Emergency First Aid -->
+        <div class="button-grid" style="margin: 3rem 0;">
+            <div class="feature-card">
+                <h3>🩹 Emergency First Aid</h3>
+                <p>Learn critical first aid techniques while waiting for help</p>
+                <a href="firstaid.html" class="btn-primary2" style="text-decoration: none;">
+                    📖 First Aid Guide
+                </a>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📍 Track Ambulance</h3>
+                <p>Track your ambulance booking using your booking ID</p>
+                <a href="track-by-booking-id.html" class="btn-primary" style="text-decoration: none;">
+                    🔍 Track Booking
+                </a>
+            </div>
+        </div>
+        
+        <!-- Emergency Tips -->
+        <div class="feature-card" style="background: rgba(0, 255, 133, 0.1); border-color: rgba(0, 255, 133, 0.3);">
+            <h3 style="color: #00ff85;">⚡ Emergency Response Tips</h3>
+            <div style="text-align: left; color: #a1a1aa; line-height: 1.8; font-size: 1.05rem;">
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: #00ff85;">🔥 Stay Calm:</strong> Take deep breaths and assess the situation
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: #00ff85;">📞 Call First:</strong> Always call emergency services before anything else
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: #00ff85;">📍 Share Location:</strong> Provide exact address and landmarks
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: #00ff85;">🩹 Basic Aid:</strong> Only provide first aid if you're trained
+                </div>
+                <div>
+                    <strong style="color: #00ff85;">👥 Stay with Patient:</strong> Don't leave them alone unless necessary
+                </div>
+            </div>
+        </div>
+        
+        <!-- Common Emergencies Guide -->
+        <div style="margin-top: 3rem;">
+            <h2>🆘 Common Emergency Situations</h2>
+            <div class="button-grid">
+                <div class="feature-card" onclick="showEmergencyInfo('cardiac')" style="cursor: pointer;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💓</div>
+                    <h3>Heart Attack</h3>
+                    <p>Chest pain, shortness of breath, nausea</p>
+                </div>
+                
+                <div class="feature-card" onclick="showEmergencyInfo('stroke')" style="cursor: pointer;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
+                    <h3>Stroke</h3>
+                    <p>Sudden numbness, confusion, trouble speaking</p>
+                </div>
+                
+                <div class="feature-card" onclick="showEmergencyInfo('accident')" style="cursor: pointer;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🚗</div>
+                    <h3>Accident</h3>
+                    <p>Vehicle collision, falls, injuries</p>
+                </div>
+                
+                <div class="feature-card" onclick="showEmergencyInfo('breathing')" style="cursor: pointer;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🫁</div>
+                    <h3>Breathing Issues</h3>
+                    <p>Choking, asthma, respiratory distress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Emergency Info Modal -->
+    <div id="emergencyModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; backdrop-filter: blur(10px);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(26, 26, 46, 0.95); border-radius: 24px; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <button onclick="closeModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #ff007b; font-size: 1.5rem; cursor: pointer;">✕</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const emergencyInfo = {
+            cardiac: {
+                title: "💓 Heart Attack Emergency",
+                symptoms: [
+                    "Severe chest pain or pressure",
+                    "Pain radiating to arm, jaw, or back", 
+                    "Shortness of breath",
+                    "Nausea or vomiting",
+                    "Cold sweats",
+                    "Dizziness or lightheadedness"
+                ],
+                actions: [
+                    "Call 108/112 immediately",
+                    "Give aspirin if available and not allergic",
+                    "Loosen tight clothing",
+                    "Keep person calm and seated",
+                    "Monitor breathing and pulse",
+                    "Be prepared to perform CPR"
+                ]
+            },
+            stroke: {
+                title: "🧠 Stroke Emergency",
+                symptoms: [
+                    "Sudden numbness of face, arm, or leg",
+                    "Confusion or trouble speaking",
+                    "Trouble seeing in one or both eyes",
+                    "Trouble walking or dizziness",
+                    "Severe headache with no cause",
+                    "Drooping face or uneven smile"
+                ],
+                actions: [
+                    "Call 108/112 immediately - Time is critical",
+                    "Note the time symptoms started",
+                    "Keep person calm and lying down",
+                    "Don't give food or water",
+                    "Monitor breathing",
+                    "Gather medical information for EMTs"
+                ]
+            },
+            accident: {
+                title: "🚗 Accident Emergency",
+                symptoms: [
+                    "Visible injuries or bleeding",
+                    "Loss of consciousness",
+                    "Difficulty breathing",
+                    "Severe pain",
+                    "Inability to move",
+                    "Signs of shock"
+                ],
+                actions: [
+                    "Ensure scene safety first",
+                    "Call 108/112 immediately",
+                    "Don't move injured person unless in danger",
+                    "Control bleeding with direct pressure",
+                    "Keep person warm and calm",
+                    "Monitor vital signs"
+                ]
+            },
+            breathing: {
+                title: "🫁 Breathing Emergency",
+                symptoms: [
+                    "Difficulty breathing or wheezing",
+                    "Blue lips or fingernails",
+                    "Cannot speak in full sentences",
+                    "Rapid breathing",
+                    "Chest tightness",
+                    "Panic or anxiety"
+                ],
+                actions: [
+                    "Call 108/112 if severe",
+                    "Help person sit upright",
+                    "Assist with inhaler if available",
+                    "Loosen tight clothing",
+                    "Stay calm and reassure",
+                    "If choking, perform Heimlich maneuver"
+                ]
+            }
+        };
+
+        function showEmergencyInfo(type) {
+            const info = emergencyInfo[type];
+            const content = `
+                <h2 style="color: #00d4ff; margin-bottom: 1.5rem;">${info.title}</h2>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: #ff007b; margin-bottom: 1rem;">⚠️ Signs & Symptoms:</h3>
+                    <ul style="color: #a1a1aa; line-height: 1.6; padding-left: 1.5rem;">
+                        ${info.symptoms.map(symptom => `<li style="margin-bottom: 0.5rem;">${symptom}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="color: #00ff85; margin-bottom: 1rem;">✅ Immediate Actions:</h3>
+                    <ol style="color: #a1a1aa; line-height: 1.6; padding-left: 1.5rem;">
+                        ${info.actions.map(action => `<li style="margin-bottom: 0.5rem;"><strong>${action}</strong></li>`).join('')}
+                    </ol>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 0, 123, 0.1); border-radius: 12px; border: 1px solid rgba(255, 0, 123, 0.3);">
+                    <p style="color: #ff007b; font-weight: 600; text-align: center;">
+                        🚨 Remember: Call emergency services first, then provide aid
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('emergencyModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('emergencyModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('emergencyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Add escape key support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

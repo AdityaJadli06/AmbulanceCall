@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Ambulance</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 20px;
+    }
+    #map {
+      height: 500px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #details {
+      margin-top: 15px;
+      font-size: 16px;
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Track Your Ambulance</h1>
+  <input type="text" id="bookingIdInput" placeholder="Enter Booking ID" />
+  <br>
+  <button id="trackButton">🚑 Track Ambulance</button>
+
+  <div id="details"></div>
+  <div id="map"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHmxxW-gWoCgs6CUObO8YBVH4w3V5VnU4&libraries=places"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+  import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9HFAKmE8J1UcsdDf6mfvKSeTDccdqwkg",
+    authDomain: "ambcall-14461.firebaseapp.com",
+    projectId: "ambcall-14461",
+    storageBucket: "ambcall-14461.appspot.com",
+    messagingSenderId: "978623448666",
+    appId: "1:978623448666:web:790d5f07ee0fb01c74fa63"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let map, userMarker, driverMarker, routeLine;
+
+  async function startTracking() {
+      const bookingId = document.getElementById("bookingIdInput").value.trim();
+      if (!bookingId) {
+          alert("Please enter a booking ID.");
+          return;
+      }
+
+      const docRef = doc(db, "bookings", bookingId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+          alert("❌ Booking not found. Please check your Booking ID.");
+          return;
+      }
+
+      const bookingData = docSnap.data();
+      const hospitalLat = bookingData.coordinates.lat;
+      const hospitalLng = bookingData.coordinates.lng;
+
+      if (!map) {
+          map = new google.maps.Map(document.getElementById("map"), {
+              center: { lat: hospitalLat, lng: hospitalLng },
+              zoom: 14,
+          });
+      }
+
+      if (userMarker) userMarker.setMap(null);
+      if (driverMarker) driverMarker.setMap(null);
+
+      userMarker = new google.maps.Marker({
+          position: { lat: hospitalLat, lng: hospitalLng },
+          map: map,
+          title: "Hospital Location",
+      });
+
+      // Watch the driver's live location
+      onSnapshot(docRef, (docSnap) => {
+          const driverLocation = docSnap.data().driverLiveLocation;
+
+          if (driverLocation?.lat && driverLocation?.lng) {
+              if (!driverMarker) {
+                  driverMarker = new google.maps.Marker({
+                      position: { lat: driverLocation.lat, lng: driverLocation.lng },
+                      map: map,
+                      title: "Ambulance Location",
+                  });
+              } else {
+                  driverMarker.setPosition({ lat: driverLocation.lat, lng: driverLocation.lng });
+              }
+
+              // Draw route line
+              if (routeLine) routeLine.setMap(null);
+              routeLine = new google.maps.Polyline({
+                  path: [
+                      { lat: driverLocation.lat, lng: driverLocation.lng },
+                      { lat: hospitalLat, lng: hospitalLng },
+                  ],
+                  geodesic: true,
+                  strokeColor: "#FF0000",
+                  strokeOpacity: 1.0,
+                  strokeWeight: 2,
+                  map: map,
+              });
+          }
+      });
+  }
+
+  document.getElementById("trackButton").addEventListener("click", startTracking);
+</script>
+</body>
+</html>
