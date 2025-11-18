@@ -3,16 +3,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-// Firebase config
+// Driver Firebase config (updated)
 const firebaseConfig = {
-    apiKey: "AIzaSyD8wQLweHLDqGhR52pmd1QuUceqUBWeIBM",
-    authDomain: "driver-login-3aa8b.firebaseapp.com",
-    projectId: "driver-login-3aa8b",
-    storageBucket: "driver-login-3aa8b.firebasestorage.app",
-    messagingSenderId: "313835825411",
-    appId: "1:313835825411:web:7dbf5b4103cd0a53f02136",
-    measurementId: "G-NB8KM8NHYR"
-  };
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  apiKey: "AIzaSyC9HFAKmE8J1UcsdDf6mfvKSeTDccdqwkg",
+  authDomain: "ambcall-14461.firebaseapp.com",
+  databaseURL: "https://ambcall-14461-default-rtdb.firebaseio.com",
+  projectId: "ambcall-14461",
+  storageBucket: "ambcall-14461.firebasestorage.app",
+  messagingSenderId: "978623448666",
+  appId: "1:978623448666:web:b78fc669d36c4c6e74fa63",
+  measurementId: "G-PXMX4SJK9G"
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

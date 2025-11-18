@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results - Nearest Hospitals</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHmxxW-gWoCgs6CUObO8YBVH4w3V5VnU4&libraries=places"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <a href="booking.html" class="back-btn" title="Back to Booking">←</a>
@@ -45,60 +46,6 @@
     <div id="map" style="height: 400px; margin-top: 2rem;"></div>
 
     <script>
-        // Mock hospital data - In real implementation, this would come from your backend API
-        const mockHospitals = [
-            {
-                id: 1,
-                name: "City General Hospital",
-                distance: "1.2 km",
-                address: "123 Main Street, City Center",
-                phone: "+91 98765 43210",
-                specialties: ["Emergency Care", "Cardiology", "Trauma"],
-                rating: 4.5,
-                estimatedTime: "8-12 min"
-            },
-            {
-                id: 2,
-                name: "Metro Medical Center",
-                distance: "2.1 km",
-                address: "456 Health Avenue, Metro District",
-                phone: "+91 98765 43211",
-                specialties: ["ICU", "Surgery", "Pediatrics"],
-                rating: 4.3,
-                estimatedTime: "12-18 min"
-            },
-            {
-                id: 3,
-                name: "Regional Emergency Hospital",
-                distance: "2.8 km",
-                address: "789 Care Boulevard, Regional Area",
-                phone: "+91 98765 43212",
-                specialties: ["Trauma Center", "Neurology", "Orthopedics"],
-                rating: 4.7,
-                estimatedTime: "15-22 min"
-            },
-            {
-                id: 4,
-                name: "Community Health Center",
-                distance: "3.5 km",
-                address: "321 Wellness Road, Community Zone",
-                phone: "+91 98765 43213",
-                specialties: ["General Medicine", "Emergency", "Maternity"],
-                rating: 4.1,
-                estimatedTime: "18-25 min"
-            },
-            {
-                id: 5,
-                name: "Advanced Care Hospital",
-                distance: "4.2 km",
-                address: "654 Medical Plaza, Advanced District",
-                phone: "+91 98765 43214",
-                specialties: ["Critical Care", "Oncology", "Cardiothoracic"],
-                rating: 4.6,
-                estimatedTime: "22-30 min"
-            }
-        ];
-
         // Display booking information
         function displayBookingInfo() {
             const bookingData = JSON.parse(localStorage.getItem('currentBooking') || '{}');
@@ -117,63 +64,28 @@
             }
         }
 
-        // Display hospitals
-        function displayHospitals() {
-            const hospitalListDiv = document.getElementById('hospitalList');
-            
-            hospitalListDiv.innerHTML = mockHospitals.map(hospital => `
-                <div class="feature-card hospital-card" style="text-align: left; position: relative;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <h3 style="color: #00d4ff; margin: 0; flex: 1;">${hospital.name}</h3>
-                        <div style="text-align: right; color: #00ff85; font-weight: 600;">
-                            <div style="font-size: 1.1rem;">${hospital.distance}</div>
-                            <div style="font-size: 0.9rem; color: #a1a1aa;">⏱️ ${hospital.estimatedTime}</div>
-                        </div>
-                    </div>
-                    
-                    <p style="color: #a1a1aa; margin: 0.5rem 0; font-size: 0.95rem;">
-                        📍 ${hospital.address}
-                    </p>
-                    
-                    <div style="margin: 1rem 0;">
-                        <div style="color: #71717a; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                            <strong>Specialties:</strong> ${hospital.specialties.join(', ')}
-                        </div>
-                        <div style="color: #ffd700; font-size: 0.9rem;">
-                            ⭐ ${hospital.rating}/5.0
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <a href="tel:${hospital.phone}" 
-                           class="btn-secondary" 
-                           style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 0.875rem;">
-                            📞 Call Ambulance
-                        </a>
-                        <button onclick="getDirections('${hospital.address}')" 
-                                class="btn-primary" 
-                                style="flex: 1; font-size: 0.9rem;">
-                            🗺️ Directions
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 1rem; font-size: 0.9rem; color: #a1a1aa; text-align: center;">
-                        <strong style="color: #00d4ff;">📞 ${hospital.phone}</strong>
-                    </div>
-                </div>
-            `).join('');
+        // Hospitals will be filled by Places API in initMap(); display fallback message if needed.
+
+        // Get directions function (OpenStreetMap)
+        function getDirections(hospitalLat, hospitalLon) {
+            const userLat = localStorage.getItem('latitude');
+            const userLon = localStorage.getItem('longitude');
+            if (userLat && userLon) {
+                const url = `https://www.openstreetmap.org/directions?from=${userLat},${userLon}&to=${hospitalLat},${hospitalLon}`;
+                window.open(url, '_blank');
+            } else {
+                alert('User location not available for directions.');
+            }
         }
 
-        // Get directions function
-        function getDirections(hospitalAddress) {
-            const bookingData = JSON.parse(localStorage.getItem('currentBooking') || '{}');
-            const userLocation = bookingData.location || '';
-            
-            // Create Google Maps directions URL
-            const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(userLocation)}/${encodeURIComponent(hospitalAddress)}`;
-            
-            // Open in new tab
-            window.open(mapsUrl, '_blank');
+        // Haversine distance (km)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
         }
 
         // Emergency call function
@@ -186,7 +98,6 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             displayBookingInfo();
-            displayHospitals();
         });
 
         // Add some interactive features
@@ -206,59 +117,108 @@
         });
 
         function initMap() {
-            const userLat = parseFloat(localStorage.getItem("latitude"));
-            const userLon = parseFloat(localStorage.getItem("longitude"));
+            // Prefer coordinates saved with the booking (if user clicked Get Location then submitted)
+            const bookingData = JSON.parse(localStorage.getItem('currentBooking') || '{}');
+            let userLat = bookingData.coordinates ? parseFloat(bookingData.coordinates.lat) : parseFloat(localStorage.getItem("latitude"));
+            let userLon = bookingData.coordinates ? parseFloat(bookingData.coordinates.lng) : parseFloat(localStorage.getItem("longitude"));
 
-            const map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: userLat, lng: userLon },
-                zoom: 12,
-            });
+            function buildLeafletMapAndSearch(lat, lon) {
+                const map = L.map('map').setView([lat, lon], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
 
-            const userMarker = new google.maps.Marker({
-                position: { lat: userLat, lng: userLon },
-                map: map,
-                title: "Your Location",
-            });
+                L.marker([lat, lon]).addTo(map).bindPopup('Your Location').openPopup();
 
-            // Fetch nearby hospitals using Google Places API
-            const service = new google.maps.places.PlacesService(map);
-            const request = {
-                location: { lat: userLat, lng: userLon },
-                radius: 5000, // 5 km radius
-                type: ["hospital"],
-            };
+                // Overpass API query for nearby hospitals within 5 km
+                const radius = 5000;
+                const query = `[out:json];(node["amenity"="hospital"](around:${radius},${lat},${lon});way["amenity"="hospital"](around:${radius},${lat},${lon});relation["amenity"="hospital"](around:${radius},${lat},${lon}););out center;`;
+                const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
 
-            service.nearbySearch(request, (results, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    const hospitalListDiv = document.getElementById("hospitalList");
-                    hospitalListDiv.innerHTML = "";
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        const elements = data.elements || [];
+                        const hospitals = elements.map(el => {
+                            const elLat = el.type === 'node' ? el.lat : (el.center && el.center.lat);
+                            const elLon = el.type === 'node' ? el.lon : (el.center && el.center.lon);
+                            const name = el.tags && (el.tags.name || el.tags['official_name']) || 'Unnamed Hospital';
+                            let addr = '';
+                            if (el.tags) {
+                                const parts = [];
+                                if (el.tags['addr:housenumber']) parts.push(el.tags['addr:housenumber']);
+                                if (el.tags['addr:street']) parts.push(el.tags['addr:street']);
+                                if (el.tags['addr:city']) parts.push(el.tags['addr:city']);
+                                if (el.tags['addr:postcode']) parts.push(el.tags['addr:postcode']);
+                                addr = parts.join(', ');
+                            }
+                            const distance = calculateDistance(lat, lon, elLat, elLon);
+                            return { name, addr, lat: elLat, lon: elLon, distance };
+                        }).filter(h => Number.isFinite(h.lat) && Number.isFinite(h.lon));
 
-                    results.slice(0, 5).forEach((place) => {
-                        const hospitalCard = document.createElement("div");
-                        hospitalCard.className = "feature-card hospital-card";
-                        hospitalCard.innerHTML = `
-                            <h3>${place.name}</h3>
-                            <p>📍 ${place.vicinity}</p>
-                            <p>⭐ ${place.rating || "N/A"}/5.0</p>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat()},${place.geometry.location.lng()}" target="_blank" class="btn-secondary">📍 Get Directions</a>
-                        `;
-                        hospitalListDiv.appendChild(hospitalCard);
+                        hospitals.sort((a,b) => a.distance - b.distance);
+                        const top = hospitals.slice(0,5);
 
-                        // Add hospital marker to the map
-                        new google.maps.Marker({
-                            position: place.geometry.location,
-                            map: map,
-                            title: place.name,
+                        const hospitalListDiv = document.getElementById('hospitalList');
+                        hospitalListDiv.innerHTML = '';
+
+                        if (top.length === 0) {
+                            hospitalListDiv.innerHTML = '<p>No nearby hospitals found within 5 km.</p>';
+                            return;
+                        }
+
+                        top.forEach(h => {
+                            const card = document.createElement('div');
+                            card.className = 'feature-card hospital-card';
+                            card.style.textAlign = 'left';
+                            card.innerHTML = `
+                                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem;">
+                                    <h3 style="color:#00d4ff;margin:0;flex:1;">${h.name}</h3>
+                                    <div style="text-align:right;color:#00ff85;font-weight:600;">
+                                        <div style="font-size:1.1rem;">${h.distance.toFixed(2)} km</div>
+                                    </div>
+                                </div>
+                                <p style="color:#a1a1aa;margin:0.5rem 0;font-size:0.95rem;">📍 ${h.addr || ''}</p>
+                                <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                                    <a href="#" onclick="callEmergency();return false;" class="btn-secondary" style="flex:1;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:0.875rem;">📞 Call Ambulance</a>
+                                    <a href="#" onclick="getDirections(${h.lat}, ${h.lon});return false;" class="btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;">🗺️ Directions</a>
+                                </div>
+                            `;
+
+                            hospitalListDiv.appendChild(card);
+
+                            L.marker([h.lat, h.lon]).addTo(map).bindPopup(h.name);
                         });
+                    })
+                    .catch(err => {
+                        console.error('Overpass error', err);
+                        document.getElementById('hospitalList').innerHTML = '<p>Error fetching nearby hospitals.</p>';
                     });
+            }
+
+            if (!Number.isFinite(userLat) || !Number.isFinite(userLon)) {
+                // Try to geolocate if localStorage doesn't have coords
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(pos) {
+                        userLat = pos.coords.latitude;
+                        userLon = pos.coords.longitude;
+                        localStorage.setItem("latitude", userLat);
+                        localStorage.setItem("longitude", userLon);
+                        buildLeafletMapAndSearch(userLat, userLon);
+                    }, function(err) {
+                        document.getElementById('hospitalList').innerHTML = '<p>Location not available. Please go back and provide your location.</p>';
+                        console.error('Geolocation error:', err);
+                    }, { enableHighAccuracy: true, timeout: 10000 });
                 } else {
-                    console.error("Places API error:", status);
+                    document.getElementById('hospitalList').innerHTML = '<p>Geolocation not supported. Please enter location on booking page.</p>';
                 }
-            });
+            } else {
+                buildLeafletMapAndSearch(userLat, userLon);
+            }
         }
 
         // Initialize the map after the page loads
-        window.onload = initMap;
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>

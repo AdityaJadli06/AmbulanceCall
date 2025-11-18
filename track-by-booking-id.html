@@ -52,7 +52,6 @@
   <div id="details"></div>
   <div id="map"></div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHmxxW-gWoCgs6CUObO8YBVH4w3V5VnU4&libraries=places"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
   import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -90,52 +89,39 @@
       const hospitalLat = bookingData.coordinates.lat;
       const hospitalLng = bookingData.coordinates.lng;
 
-      if (!map) {
-          map = new google.maps.Map(document.getElementById("map"), {
-              center: { lat: hospitalLat, lng: hospitalLng },
-              zoom: 14,
-          });
-      }
+        if (!map) {
+          map = L.map('map').setView([hospitalLat, hospitalLng], 14);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+        }
 
-      if (userMarker) userMarker.setMap(null);
-      if (driverMarker) driverMarker.setMap(null);
+        if (userMarker) userMarker.remove();
+        if (driverMarker) driverMarker.remove();
 
-      userMarker = new google.maps.Marker({
-          position: { lat: hospitalLat, lng: hospitalLng },
-          map: map,
-          title: "Hospital Location",
-      });
+        userMarker = L.marker([hospitalLat, hospitalLng]).addTo(map).bindPopup('Hospital Location');
 
-      // Watch the driver's live location
-      onSnapshot(docRef, (docSnap) => {
+        // Watch the driver's live location
+        onSnapshot(docRef, (docSnap) => {
           const driverLocation = docSnap.data().driverLiveLocation;
 
           if (driverLocation?.lat && driverLocation?.lng) {
-              if (!driverMarker) {
-                  driverMarker = new google.maps.Marker({
-                      position: { lat: driverLocation.lat, lng: driverLocation.lng },
-                      map: map,
-                      title: "Ambulance Location",
-                  });
-              } else {
-                  driverMarker.setPosition({ lat: driverLocation.lat, lng: driverLocation.lng });
-              }
+            if (!driverMarker) {
+              driverMarker = L.marker([driverLocation.lat, driverLocation.lng]).addTo(map).bindPopup('Ambulance Location');
+            } else {
+              driverMarker.setLatLng([driverLocation.lat, driverLocation.lng]);
+            }
 
-              // Draw route line
-              if (routeLine) routeLine.setMap(null);
-              routeLine = new google.maps.Polyline({
-                  path: [
-                      { lat: driverLocation.lat, lng: driverLocation.lng },
-                      { lat: hospitalLat, lng: hospitalLng },
-                  ],
-                  geodesic: true,
-                  strokeColor: "#FF0000",
-                  strokeOpacity: 1.0,
-                  strokeWeight: 2,
-                  map: map,
-              });
+            // Draw route line
+            if (routeLine) {
+              try { map.removeLayer(routeLine); } catch(e) {}
+            }
+            routeLine = L.polyline([
+              [driverLocation.lat, driverLocation.lng],
+              [hospitalLat, hospitalLng]
+            ], { color: '#FF0000', weight: 2 }).addTo(map);
           }
-      });
+        });
   }
 
   document.getElementById("trackButton").addEventListener("click", startTracking);

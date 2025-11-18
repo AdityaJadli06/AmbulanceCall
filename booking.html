@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHmxxW-gWoCgs6CUObO8YBVH4w3V5VnU4&libraries=places"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <div class="booking-container">
@@ -54,82 +55,55 @@
     </div>
 
     <script>
-        let map, marker;
-
-        // Get user location
+        // Use browser geolocation + Nominatim reverse geocoding (OpenStreetMap)
         document.getElementById('useLocation').addEventListener('click', function() {
             const button = this;
             const locationInput = document.getElementById('location');
             const statusMessage = document.getElementById('statusMessage');
-            
-            // Add loading state
+
             button.innerHTML = '<div class="loading"></div>Getting...';
             button.disabled = true;
-            
+
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async function(position) {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
+                navigator.geolocation.getCurrentPosition(async function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
 
-                        // Initialize the map if not already initialized
-                        if (!map) {
-                            map = new google.maps.Map(document.getElementById("map"), {
-                                center: { lat, lng: lon },
-                                zoom: 14,
-                            });
-                        }
+                    try {
+                        // Reverse geocode using Nominatim
+                        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+                        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                        const data = await res.json();
 
-                        // Add or update the marker
-                        if (marker) {
-                            marker.setPosition({ lat, lng: lon });
+                        if (data?.display_name) {
+                            locationInput.value = data.display_name;
+                            showStatus('Location found successfully!', 'success');
                         } else {
-                            marker = new google.maps.Marker({
-                                position: { lat, lng: lon },
-                                map: map,
-                                title: "Your Location",
-                            });
+                            locationInput.value = `${lat}, ${lon}`;
+                            showStatus('Coordinates captured successfully!', 'success');
                         }
 
-                        // Use reverse geocoding to get address
-                        const geocoder = new google.maps.Geocoder();
-                        const latLng = { lat, lng: lon };
-
-                        geocoder.geocode({ location: latLng }, (results, status) => {
-                            if (status === "OK" && results[0]) {
-                                locationInput.value = results[0].formatted_address;
-                                showStatus('Location found successfully!', 'success');
-                            } else {
-                                locationInput.value = `${lat}, ${lon}`;
-                                showStatus('Coordinates captured successfully!', 'success');
-                            }
-                        });
-
-                        // Save location to localStorage and redirect
-                        localStorage.setItem("latitude", lat);
-                        localStorage.setItem("longitude", lon);
-                        setTimeout(() => {
-                            window.location.href = "results.html";
-                        }, 1000); // Redirect after 1 second
-
-                        // Reset button
+                        // Save coordinates for later (do NOT redirect here)
+                        localStorage.setItem('latitude', lat);
+                        localStorage.setItem('longitude', lon);
+                        showStatus('Location saved. Click "Find Nearest Hospitals" to continue.', 'info');
+                    } catch (err) {
+                        console.error('Reverse geocode error:', err);
+                        locationInput.value = `${lat}, ${lon}`;
+                        showStatus('Coordinates captured (reverse geocode failed)', 'info');
+                        localStorage.setItem('latitude', lat);
+                        localStorage.setItem('longitude', lon);
+                        showStatus('Coordinates saved (reverse geocode failed). Click "Find Nearest Hospitals" to continue.', 'info');
+                    } finally {
                         button.innerHTML = '📍 Get Location';
                         button.disabled = false;
-                    },
-                    function(error) {
-                        console.error('Error getting location:', error);
-                        showStatus('Location access denied. Please enter manually.', 'error');
-                        
-                        // Reset button
-                        button.innerHTML = '📍 Get Location';
-                        button.disabled = false;
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 60000
                     }
-                );
+                }, function(error) {
+                    console.error('Error getting location:', error);
+                    showStatus('Location access denied. Please enter manually.', 'error');
+                    button.innerHTML = '📍 Get Location';
+                    button.disabled = false;
+                }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
             } else {
                 showStatus('Geolocation not supported by browser', 'error');
                 button.innerHTML = '📍 Get Location';
@@ -165,6 +139,17 @@
                 timestamp: new Date().toISOString(),
                 bookingId: generateBookingId()
             };
+
+            // Include coordinates if available
+            const latStr = localStorage.getItem('latitude');
+            const lonStr = localStorage.getItem('longitude');
+            if (latStr && lonStr) {
+                const lat = parseFloat(latStr);
+                const lon = parseFloat(lonStr);
+                if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                    bookingData.coordinates = { lat: lat, lng: lon };
+                }
+            }
             
             localStorage.setItem('currentBooking', JSON.stringify(bookingData));
             
